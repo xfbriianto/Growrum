@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html class="light" lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Growrum - Kontak</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<!-- AOS - Animate On Scroll (sama seperti halaman utama) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+<style>
+  /* ─── GLOBAL ─────────────────────────────── */
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f6faf7;
+    color: #1a2e22;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* ─── NAVBAR ANIMATIONS (sama dari kode utama) ─── */
+  #navbar header {
+    animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+  #mobileMenu:not(.hidden) {
+    animation: menuOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes menuOpen {
+    from { opacity: 0; transform: scaleY(0.95) translateY(-8px); }
+    to   { opacity: 1; transform: scaleY(1)    translateY(0);    }
+  }
+  #mobileOverlay:not(.hidden) {
+    animation: fadeIn 0.25s ease both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .nav-link {
+    position: relative;
+    padding-bottom: 2px;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0;
+    width: 0; height: 2px;
+    background: #15803d;
+    transition: width 0.25s ease;
+    border-radius: 2px;
+  }
+  .nav-link:hover::after { width: 100%; }
+
+  /* ─── SCROLL PROGRESS BAR ────────────────── */
+  #scroll-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #15803d, #4ade80);
+    z-index: 9999;
+    transition: width 0.1s linear;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ─── BACK TO TOP ────────────────────────── */
+  #back-to-top {
+    position: fixed;
+    bottom: 2rem; right: 1.5rem;
+    z-index: 100;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #15803d;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(21,128,61,0.3);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    border: none;
+  }
+  #back-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #back-to-top:hover { background: #166534; }
+
+  /* ─── CARD HOVER EFFECTS (motion seperti produk) ── */
+  .contact-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease;
+  }
+  .contact-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(21, 128, 61, 0.12);
+  }
+  .icon-circle {
+    transition: transform 0.2s ease;
+  }
+  .contact-card:hover .icon-circle {
+    transform: scale(1.05);
+  }
+
+  /* Tombol kirim pesan */
+  .btn-submit {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(21, 128, 61, 0.25);
+  }
+
+  /* Item petani hub */
+  .farmer-item {
+    transition: all 0.2s ease;
+  }
+  .farmer-item:hover {
+    background-color: #eef4f0;
+    transform: translateX(4px);
+  }
+
+  /* map pin animation */
+  .map-pin-bounce {
+    animation: bounceSoft 2s infinite ease-in-out;
+  }
+  @keyframes bounceSoft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* AOS overrides */
+  [data-aos] { pointer-events: none; }
+  [data-aos].aos-animate { pointer-events: auto; }
+</style>
+</head>
+<body class="bg-[#f6faf7] text-[#1a2e22] antialiased">
+
+<!-- Scroll Progress Bar -->
+<div id="scroll-bar"></div>
+
+<!-- Back to Top Button -->
+<button id="back-to-top" aria-label="Kembali ke atas" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <span class="material-symbols-outlined text-[20px]">arrow_upward</span>
+</button>
+
+<!-- NAVBAR CONTAINER -->
+<div id="navbar"></div>
+
+<script>
+  // Load navbar dengan fallback (sama seperti halaman utama)
+  fetch('components/navbar.html')
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById('navbar').innerHTML = data;
+      setActiveNav();
+      initNavbar();
+    })
+    .catch(() => {
+      // fallback sederhana
+      document.getElementById('navbar').innerHTML = `
+        <nav class="bg-white/95 backdrop-blur-sm border-b border-green-100 sticky top-0 z-40">
+          <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+            <div class="text-green-700 font-bold text-xl tracking-tight">TERRAFLOW AGRI</div>
+            <div class="hidden md:flex gap-8"><a href="#" class="nav-link">Beranda</a><a href="#" class="nav-link">Kontak</a></div>
+          </div>
+        </nav>`;
+      setActiveNav();
+    });
+
+  function setActiveNav() {
+    const links = document.querySelectorAll(".nav-link");
+    const currentPage = window.location.pathname.split("/").pop() || 'kontak.html';
+    links.forEach(link => {
+      const linkPage = link.getAttribute("href");
+      if (linkPage === currentPage) {
+        link.classList.add("text-green-700","font-semibold","border-b-2","border-green-600","pb-1");
+      } else {
+        link.classList.remove("text-green-700","font-semibold","border-b-2","border-green-600","pb-1");
+      }
+    });
+  }
+
+  function initNavbar() {
+    const btn = document.getElementById("menuBtn");
+    const menu = document.getElementById("mobileMenu");
+    const overlay = document.getElementById("mobileOverlay");
+    if (!btn || !menu) return;
+    function openMenu() { menu.classList.remove("hidden"); if(overlay) overlay.classList.remove("hidden"); btn.setAttribute("aria-expanded","true"); document.body.style.overflow = "hidden"; }
+    function closeMenu() { menu.classList.add("hidden"); if(overlay) overlay.classList.add("hidden"); btn.setAttribute("aria-expanded","false"); document.body.style.overflow = ""; }
+    btn.addEventListener("click", () => menu.classList.contains("hidden") ? openMenu() : closeMenu());
+    if(overlay) overlay.addEventListener("click", closeMenu);
+    menu.querySelectorAll("a").forEach(a => a.addEventListener("click", closeMenu));
+  }
+</script>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════════ -->
+<main class="flex-grow pt-[100px] pb-24 px-4 md:px-8 max-w-7xl mx-auto w-full">
+
+  <!-- ── Header ─────────────────────────────────── -->
+  <header class="text-center mb-[80px] max-w-2xl mx-auto mt-12"
+          data-aos="fade-up" data-aos-duration="800">
+    <h1 class="text-4xl md:text-5xl font-bold text-green-700 mb-6"
+        style="font-family:'Plus Jakarta Sans',sans-serif">
+      Hubungi Kami
+    </h1>
+    <p class="text-base md:text-lg text-[#4a6257]">
+      Membangun jembatan langsung antara petani lokal dan pasar.
+      Kami siap membantu setiap kebutuhan rantai pasok agrikultur Anda.
+    </p>
+  </header>
+
+  <!-- ── Contact Cards ──────────────────────────── -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-[80px]">
+
+    <!-- Telepon / WA -->
+    <div class="contact-card bg-white rounded-2xl p-8 shadow-md flex flex-col items-center text-center border border-green-100"
+         data-aos="fade-up" data-aos-delay="0" data-aos-duration="600">
+      <div class="icon-circle w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-6 text-green-700 transition-transform">
+        <span class="material-symbols-outlined text-3xl">call</span>
+      </div>
+      <h3 class="text-xl font-bold text-[#1a2e22] mb-2">Telepon &amp; WhatsApp</h3>
+      <p class="text-sm text-[#4a6257] mb-4 flex-grow">
+        Layanan pelanggan kami tersedia Senin–Jumat, 08:00–17:00 WIB.
+      </p>
+      <a class="text-green-700 font-semibold hover:underline"
+         href="tel:+6281234567890">+62 812 3456 7890</a>
+    </div>
+
+    <!-- Email -->
+    <div class="contact-card bg-white rounded-2xl p-8 shadow-md flex flex-col items-center text-center border border-green-100"
+         data-aos="fade-up" data-aos-delay="100" data-aos-duration="600">
+      <div class="icon-circle w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-6 text-green-700">
+        <span class="material-symbols-outlined text-3xl">mail</span>
+      </div>
+      <h3 class="text-xl font-bold text-[#1a2e22] mb-2">Email</h3>
+      <p class="text-sm text-[#4a6257] mb-4 flex-grow">
+        Untuk pertanyaan bisnis, kerjasama, dan dukungan teknis.
+      </p>
+      <a class="text-green-700 font-semibold hover:underline"
+         href="mailto:hello@terraflow.agri">hello@terraflow.agri</a>
+    </div>
+
+    <!-- Kantor Pusat -->
+    <div class="contact-card bg-white rounded-2xl p-8 shadow-md flex flex-col items-center text-center border border-green-100"
+         data-aos="fade-up" data-aos-delay="200" data-aos-duration="600">
+      <div class="icon-circle w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-6 text-green-700">
+        <span class="material-symbols-outlined text-3xl">location_on</span>
+      </div>
+      <h3 class="text-xl font-bold text-[#1a2e22] mb-2">Kantor Pusat</h3>
+      <p class="text-sm text-[#4a6257] mb-4 flex-grow">
+        Kunjungi pusat operasi kami untuk konsultasi langsung.
+      </p>
+      <span class="text-green-700 font-semibold leading-relaxed">
+        Politeknik Negeri Banyuwangi<br/>
+        Jl. Raya Jember KM13, Labanasem<br/>
+        Kabat, Banyuwangi, Jawa Timur 68461
+      </span>
+      <span class="text-sm text-[#4a6257] mt-2">Telp: (0333) 636780</span>
+    </div>
+
+  </div><!-- /Contact Cards -->
+
+  <!-- ── Form + Farmer Connection ───────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-[80px]">
+
+    <!-- Form -->
+    <div class="lg:col-span-7 bg-white rounded-2xl p-8 md:p-12 shadow-md border border-green-100"
+         data-aos="fade-right" data-aos-duration="700">
+      <h2 class="text-2xl md:text-3xl font-bold text-green-700 mb-8">Kirim Pesan</h2>
+      <form class="space-y-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-[#4a6257] mb-2" for="nama">Nama Lengkap</label>
+            <input class="w-full bg-[#f6faf7] border border-green-200 rounded-lg px-4 py-3 text-sm focus:border-green-600 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
+                   id="nama" placeholder="John Doe" type="text"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-[#4a6257] mb-2" for="email">Email</label>
+            <input class="w-full bg-[#f6faf7] border border-green-200 rounded-lg px-4 py-3 text-sm focus:border-green-600 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
+                   id="email" placeholder="john@example.com" type="email"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-[#4a6257] mb-2" for="subjek">Subjek</label>
+          <input class="w-full bg-[#f6faf7] border border-green-200 rounded-lg px-4 py-3 text-sm focus:border-green-600 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all"
+                 id="subjek" placeholder="Misal: Kerjasama Distribusi" type="text"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-[#4a6257] mb-2" for="pesan">Pesan</label>
+          <textarea class="w-full bg-[#f6faf7] border border-green-200 rounded-lg px-4 py-3 text-sm focus:border-green-600 focus:ring-2 focus:ring-green-200 focus:outline-none transition-all resize-none"
+                    id="pesan" placeholder="Tulis pesan Anda di sini..." rows="5"></textarea>
+        </div>
+
+        <button class="btn-submit w-full bg-green-700 text-white rounded-lg py-4 text-sm font-semibold hover:bg-green-800 transition-all shadow-md"
+                type="button">
+          Kirim Pesan Sekarang
+        </button>
+
+      </form>
+    </div><!-- /Form -->
+
+    <!-- Farmer Connection -->
+    <div class="lg:col-span-5 flex flex-col"
+         data-aos="fade-left" data-aos-duration="700">
+      <div class="bg-white rounded-2xl p-8 border border-green-100 shadow-md h-full flex flex-col">
+
+        <h2 class="text-xl md:text-2xl font-bold text-green-700 mb-6">Terhubung dengan Petani</h2>
+        <p class="text-sm text-[#4a6257] mb-8">
+          Hubungi langsung koperasi dan pusat regional kami untuk negosiasi kuantitas besar.
+        </p>
+
+        <div class="space-y-4 flex-grow">
+
+          <!-- Item 1 -->
+          <div class="farmer-item flex items-center justify-between p-4 bg-[#f6faf7] rounded-xl border border-green-100 cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5">
+            <div>
+              <h4 class="font-semibold text-[#1a2e22]">Koperasi Tani Subur (Jabar)</h4>
+              <span class="text-xs text-[#4a6257]">Sayuran Organik &amp; Beras</span>
+            </div>
+            <button class="bg-green-100 text-green-700 p-2 rounded-full hover:bg-green-200 transition-colors flex-shrink-0 ml-3"
+                    title="Chat via WhatsApp">
+              <span class="material-symbols-outlined text-[18px]">forum</span>
+            </button>
+          </div>
+
+          <!-- Item 2 -->
+          <div class="farmer-item flex items-center justify-between p-4 bg-[#f6faf7] rounded-xl border border-green-100 cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5">
+            <div>
+              <h4 class="font-semibold text-[#1a2e22]">Hub Distribusi Jateng</h4>
+              <span class="text-xs text-[#4a6257]">Palawija &amp; Buah-buahan</span>
+            </div>
+            <button class="bg-green-100 text-green-700 p-2 rounded-full hover:bg-green-200 transition-colors flex-shrink-0 ml-3"
+                    title="Chat via WhatsApp">
+              <span class="material-symbols-outlined text-[18px]">forum</span>
+            </button>
+          </div>
+
+          <!-- Item 3 -->
+          <div class="farmer-item flex items-center justify-between p-4 bg-[#f6faf7] rounded-xl border border-green-100 cursor-pointer transition-all hover:shadow-sm hover:-translate-y-0.5">
+            <div>
+              <h4 class="font-semibold text-[#1a2e22]">Pusat Kopi Sumatra</h4>
+              <span class="text-xs text-[#4a6257]">Kopi Arabika &amp; Robusta</span>
+            </div>
+            <button class="bg-green-100 text-green-700 p-2 rounded-full hover:bg-green-200 transition-colors flex-shrink-0 ml-3"
+                    title="Chat via WhatsApp">
+              <span class="material-symbols-outlined text-[18px]">forum</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /Farmer Connection -->
+
+  </div><!-- /Form + Farmer Grid -->
+
+  <!-- ── Map Section ────────────────────────────── -->
+  <div class="bg-white rounded-2xl overflow-hidden shadow-md border border-green-100 mb-[64px]"
+       data-aos="fade-up" data-aos-duration="800">
+
+    <div class="p-6 border-b border-green-100 bg-[#f6faf7]/50">
+      <h2 class="text-xl md:text-2xl font-bold text-green-700 flex items-center gap-2">
+        <span class="material-symbols-outlined">map</span>
+        Pusat Distribusi Utama
+      </h2>
+    </div>
+
+    <div class="h-[400px] w-full bg-[#eef4f0] relative flex items-center justify-center">
+
+      <!-- Map background image -->
+      <div class="absolute inset-0 bg-cover bg-center opacity-80"
+           style="background-image:url('https://lh3.googleusercontent.com/aida-public/AB6AXuCV7gyS4buIAFyjQqac3Gu_--unCJDqZWKLM44Wv9QgeumSgI0wvjdB1EbixbT_HIdDKXOhIUb3AF-Btkhm7DbaRlxFcwcY_TfaIQLzYngRhxQhhJxK6Fh6NzO9m-mrW10pEcPzZ4hco-kAD_06Z_K4Rb6xU0Ev_vLeemSrqyAP5yEJMtz7Rm9Nl2rPFp4pOgLeG9t_UjIxDGFf2xX6Xmxwb0CI9PsKQ1cmSFvxdLR6ZH48KnKeiX9I0auAy1sWz-rIIODPzCCUJoqu')">
+      </div>
+      <div class="absolute inset-0 bg-green-700/5"></div>
+
+      <!-- Map pin card -->
+      <div class="relative z-10 bg-white p-4 rounded-xl shadow-lg flex items-start max-w-sm m-4 border border-green-100 map-pin-bounce">
+        <div class="text-green-700 mr-4 mt-1 flex-shrink-0">
+          <span class="material-symbols-outlined text-3xl">pin_drop</span>
+        </div>
+        <div>
+          <h4 class="font-semibold text-[#1a2e22]">Politeknik Negeri Banyuwangi</h4>
+          <p class="text-sm text-[#4a6257] mt-1">
+            Jl. Raya Jember No.KM13, Kawang, Labanasem,<br/>
+            Kec. Kabat, Kabupaten Banyuwangi,<br/>
+            Jawa Timur 68461
+          </p>
+          <p class="text-xs text-green-600 mt-2 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">call</span>
+            (0333) 636780
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /Map -->
+
+</main>
+
+
+<!-- ─── FOOTER ─────────────────────────────────── -->
+<footer class="bg-[#eef4f0] w-full py-14 px-4 md:px-8 border-t border-green-100 mt-0"
+        data-aos="fade-up" data-aos-duration="600">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+
+    <div class="space-y-3 sm:col-span-2 md:col-span-1">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-green-700 text-2xl">eco</span>
+        <span class="font-bold text-lg text-green-700" style="font-family:'Plus Jakarta Sans',sans-serif">
+          GROWRUM
+        </span>
+      </div>
+      <p class="text-xs text-[#4a6257] leading-relaxed max-w-xs">
+        Membangun ekosistem pertanian modern yang transparan, efisien, dan berkelanjutan.
+      </p>
+      <p class="text-xs text-[#6e8f80]">© 2026 GROWRUM.</p>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Navigasi</h4>
+      <ul class="space-y-2">
+        <li><a href="product.html" class="text-sm text-[#4a6257] hover:text-green-700">Produk</a></li>
+        <li><a href="harga-pasar.html" class="text-sm text-[#4a6257] hover:text-green-700">Harga Pasar</a></li>
+        <li><a href="edukasi.html" class="text-sm text-[#4a6257] hover:text-green-700">Edukasi</a></li>
+        <li><a href="panen.html" class="text-sm text-[#4a6257] hover:text-green-700">Panen</a></li>
+      </ul>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Company</h4>
+      <ul class="space-y-2">
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Tentang Kami</a></li>
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Kebijakan Privasi</a></li>
+      </ul>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Legal</h4>
+      <ul class="space-y-2">
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Syarat &amp; Ketentuan</a></li>
+        <li><a href="kontak.html" class="text-sm text-[#4a6257] hover:text-green-700">Bantuan</a></li>
+      </ul>
+    </div>
+
+  </div>
+</footer>
+
+<!-- Script: AOS Init + Scroll Progress + Back to Top -->
+<script>
+  // Inisialisasi AOS (sama seperti halaman utama)
+  document.addEventListener('DOMContentLoaded', function() {
+    AOS.init({
+      once: true,
+      offset: 50,
+      easing: 'ease-out-cubic',
+      duration: 700
+    });
+  });
+
+  // Scroll progress bar
+  window.addEventListener('scroll', function() {
+    const scrolled = window.scrollY;
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const percent = maxScroll > 0 ? (scrolled / maxScroll) * 100 : 0;
+    const progressBar = document.getElementById('scroll-bar');
+    if (progressBar) progressBar.style.width = percent + '%';
+
+    // Back to top visibility
+    const backBtn = document.getElementById('back-to-top');
+    if (scrolled > 300) backBtn.classList.add('visible');
+    else backBtn.classList.remove('visible');
+  });
+
+  // Simple form interaction feedback (opsional)
+  const submitBtn = document.querySelector('.btn-submit');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      alert('Terima kasih! Pesan Anda akan segera kami respons. (Demo interaksi)');
+    });
+  }
+
+  // Farmer item buttons
+  const farmerButtons = document.querySelectorAll('.farmer-item button');
+  farmerButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      alert('Demo: Akan terhubung ke WhatsApp petani terkait.');
+    });
+  });
+</script>
+
+</body>
+</html>

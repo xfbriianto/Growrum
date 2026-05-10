@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Growrum</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<!-- AOS - Animate On Scroll -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+<style>
+  /* ─── GLOBAL ─────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f6faf7;
+    color: #1a2e22;
+    overflow-x: hidden;
+  }
+
+  /* ─── NAVBAR ANIMATIONS ───────────────────── */
+  #navbar header {
+    animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+
+  /* Mobile menu slide */
+  #mobileMenu {
+    transform-origin: top;
+    animation: none;
+  }
+  #mobileMenu:not(.hidden) {
+    animation: menuOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes menuOpen {
+    from { opacity: 0; transform: scaleY(0.95) translateY(-8px); }
+    to   { opacity: 1; transform: scaleY(1)    translateY(0);    }
+  }
+
+  /* Overlay fade */
+  #mobileOverlay:not(.hidden) {
+    animation: fadeIn 0.25s ease both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ─── NAV LINK UNDERLINE ─────────────────── */
+  .nav-link {
+    position: relative;
+    padding-bottom: 2px;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0;
+    width: 0; height: 2px;
+    background: #15803d;
+    transition: width 0.25s ease;
+    border-radius: 2px;
+  }
+  .nav-link:hover::after { width: 100%; }
+
+  /* ─── HERO ───────────────────────────────── */
+  .hero-section {
+    animation: heroReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  }
+  @keyframes heroReveal {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+
+  /* ─── CTA BUTTONS ────────────────────────── */
+  .btn-primary {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(21, 128, 61, 0.25);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-outline {
+    transition: transform 0.2s ease, background-color 0.2s ease;
+  }
+  .btn-outline:hover { transform: translateY(-2px); }
+  .btn-outline:active { transform: translateY(0); }
+
+  /* ─── PRODUCT CARDS ──────────────────────── */
+  .product-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease;
+  }
+  .product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(21, 128, 61, 0.12);
+  }
+  .product-card img {
+    transition: transform 0.5s ease;
+  }
+  .product-card:hover img { transform: scale(1.06); }
+
+  /* Add to cart button */
+  .btn-cart {
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  }
+  .btn-cart:hover {
+    background-color: #15803d;
+    color: #fff;
+    transform: scale(1.02);
+  }
+  .btn-cart:active { transform: scale(0.97); }
+
+  /* ─── STAT CARDS ─────────────────────────── */
+  .stat-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease;
+  }
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(21, 128, 61, 0.10);
+  }
+
+  /* ─── ICON PULSE (trending icon) ─────────── */
+  .icon-trending {
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1;   transform: scale(1);    }
+    50%       { opacity: 0.7; transform: scale(1.12); }
+  }
+
+  /* ─── SECTION BADGE ──────────────────────── */
+  .badge-pill {
+    animation: badgePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+  }
+  @keyframes badgePop {
+    from { opacity: 0; transform: scale(0.7); }
+    to   { opacity: 1; transform: scale(1);   }
+  }
+
+  /* ─── MOBILE MENU LINKS ───────────────────── */
+  #mobileMenu a {
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: block;
+  }
+  #mobileMenu a:hover {
+    color: #15803d;
+    transform: translateX(4px);
+  }
+
+  /* ─── SCROLL PROGRESS BAR ────────────────── */
+  #scroll-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #15803d, #4ade80);
+    z-index: 9999;
+    transition: width 0.1s linear;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ─── BACK TO TOP ────────────────────────── */
+  #back-to-top {
+    position: fixed;
+    bottom: 2rem; right: 1.5rem;
+    z-index: 100;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #15803d;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(21,128,61,0.3);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    border: none;
+  }
+  #back-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #back-to-top:hover { background: #166534; }
+
+  /* ─── FOOTER ─────────────────────────────── */
+  footer a {
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: inline-block;
+  }
+  footer a:hover { transform: translateX(3px); }
+
+  /* ─── RESPONSIVE FIXES ───────────────────── */
+  @media (max-width: 768px) {
+    .hero-title { font-size: clamp(1.8rem, 6vw, 3rem); }
+    .product-card:hover { transform: translateY(-3px); }
+  }
+
+  /* ─── AOS OVERRIDES ──────────────────────── */
+  [data-aos] { pointer-events: none; }
+  [data-aos].aos-animate { pointer-events: auto; }
+</style>
+</head>
+<body class="bg-[#f6faf7] text-[#1a2e22] antialiased">
+
+<!-- Scroll Progress -->
+<div id="scroll-bar"></div>
+
+<!-- Back to top -->
+<button id="back-to-top" aria-label="Kembali ke atas" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <span class="material-symbols-outlined text-[20px]">arrow_upward</span>
+</button>
+
+<!-- ─── NAVBAR CONTAINER ─────────────────────── -->
+<div id="navbar"></div>
+
+<!-- ─── LOAD NAVBAR + INIT ────────────────────── -->
+<script>
+  fetch('components/navbar.html')
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById('navbar').innerHTML = data;
+      setActiveNav();
+      initNavbar();
+    });
+
+  function setActiveNav() {
+    const links = document.querySelectorAll(".nav-link");
+    const currentPage = window.location.pathname.split("/").pop() || 'index.html';
+    links.forEach(link => {
+      const linkPage = link.getAttribute("href");
+      if (linkPage === currentPage) {
+        link.classList.add("text-green-700","font-semibold","border-b-2","border-green-600","pb-1");
+      } else {
+        link.classList.remove("text-green-700","font-semibold","border-b-2","border-green-600","pb-1");
+      }
+    });
+  }
+
+  function initNavbar() {
+    const btn     = document.getElementById("menuBtn");
+    const menu    = document.getElementById("mobileMenu");
+    const overlay = document.getElementById("mobileOverlay");
+
+    if (!btn || !menu) { console.warn("Navbar: elemen tidak ditemukan!"); return; }
+
+    function openMenu() {
+      menu.classList.remove("hidden");
+      if (overlay) overlay.classList.remove("hidden");
+      btn.setAttribute("aria-expanded","true");
+      document.body.style.overflow = "hidden";
+    }
+    function closeMenu() {
+      menu.classList.add("hidden");
+      if (overlay) overlay.classList.add("hidden");
+      btn.setAttribute("aria-expanded","false");
+      document.body.style.overflow = "";
+    }
+
+    btn.addEventListener("click", () =>
+      menu.classList.contains("hidden") ? openMenu() : closeMenu()
+    );
+    if (overlay) overlay.addEventListener("click", closeMenu);
+    menu.querySelectorAll("a").forEach(a => a.addEventListener("click", closeMenu));
+  }
+</script>
+
+<!-- ─── HERO SECTION ──────────────────────────── -->
+<header class="hero-section relative pt-32 pb-24 md:pt-48 md:pb-32 px-4 md:px-8 overflow-hidden bg-[#eef4f0]">
+  <div class="absolute inset-0 z-0">
+    <img
+      alt="Farm Background"
+      class="w-full h-full object-cover opacity-80"
+      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEtCJheDUStZjLsVtM0TUfjgI5yNV9jk-sfC2iISDn1JbZP00V76Is7ZpLyCuytq_L_yYx3TGt4CcAbZZq1xGigvK3llhz044eGpYGSt6p3Z7tw-E2MsHHMIBOPLSkSspDNfz756f_Jk5uXO0FF2jKaTvfJ6QWIPGslKbXO9F6vLbPQlH4OY-OpIa6XJU6PyDqWHqsvogGF8KwoEQUO_iwb9QHN1uE05fW5q75xj4_4Tp6xxno1D1MS0grEvmDxe0f0vqGMis0bDJ5"
+    />
+    <div class="absolute inset-0 bg-gradient-to-r from-white/90 to-white/30"></div>
+  </div>
+
+  <div class="relative z-10 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+    <div class="md:col-span-8 lg:col-span-6 space-y-6">
+
+      <span class="badge-pill inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold uppercase tracking-widest">
+        <span class="material-symbols-outlined text-[16px]">agriculture</span>
+        Sustainable Ecosystem
+      </span>
+
+      <h1 class="hero-title font-bold text-4xl md:text-5xl lg:text-6xl text-[#1a2e22] leading-tight" style="font-family:'Plus Jakarta Sans',sans-serif">
+        Hasil Panen Segar<br/>Langsung Dari Petani
+      </h1>
+
+      <p class="text-base md:text-lg text-[#4a6257] max-w-xl leading-relaxed">
+        Dukung pertumbuhan organik dan rantai pasok yang transparan. Temukan hasil bumi berkualitas tinggi langsung dari sumbernya, dengan harga yang adil untuk petani lokal.
+      </p>
+
+      <div class="flex flex-wrap gap-4 pt-2">
+        <a href="product.html"
+           class="btn-primary inline-flex items-center justify-center px-6 py-3 bg-green-700 text-white rounded-lg text-sm font-semibold shadow-md">
+          Belanja Produk
+        </a>
+        <a href="harga-pasar.html"
+           class="btn-outline inline-flex items-center justify-center px-6 py-3 border border-green-700/40 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-50">
+          Lihat Harga Pasar
+        </a>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- ─── PRODUCT SECTION ───────────────────────── -->
+<section class="py-20 px-4 md:px-8 bg-[#f6faf7]" id="produk">
+  <div class="max-w-7xl mx-auto space-y-10">
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4"
+         data-aos="fade-up" data-aos-duration="600">
+      <div class="space-y-1">
+        <h2 class="text-2xl md:text-3xl font-bold text-[#1a2e22]" style="font-family:'Plus Jakarta Sans',sans-serif">
+          Katalog Produk
+        </h2>
+        <p class="text-sm text-[#4a6257]">Panen terbaik minggu ini, langsung dari kebun.</p>
+      </div>
+      <a href="product.html"
+         class="inline-flex items-center gap-1 text-green-700 text-sm font-semibold hover:underline whitespace-nowrap">
+        Lihat Semua
+        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+      </a>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+
+      <!-- Card 1 -->
+      <div class="product-card bg-white rounded-2xl overflow-hidden flex flex-col border border-green-100"
+           data-aos="fade-up" data-aos-delay="0" data-aos-duration="600">
+        <div class="relative h-44 overflow-hidden bg-[#eef4f0]">
+          <img alt="Cabai Merah"
+               class="w-full h-full object-cover"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDcHTRjbtvJjXnkO-ao-XaV4uW5h2jgT7fzhzvugcDMWKBwb7f-iXmvlU-9UrysFBFFcH5hEApQCciIUqAoJNLJYPYi_EzPqZ39MGek7ly607NYcKKzz_CDcmls1qRzrKivRzujJhnsTWAIamn9l1dB24NpCvGinC1CHHClcNAKm7ZQ6FIfKZVr4H6xSAd-oxD8W_7fvVETUjnOyIOVnZq3lVresxwHlMVMHMXU0XUBZvqkJAwQPuMYBVCbG1hd4TA2-sqbQsbnWxOE"/>
+          <div class="absolute top-3 left-3 px-2 py-1 bg-green-100/90 backdrop-blur-sm text-green-700 rounded-full text-[10px] font-bold uppercase flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">eco</span> Fresh Harvest
+          </div>
+        </div>
+        <div class="p-4 flex flex-col flex-grow space-y-3">
+          <div>
+            <h3 class="font-semibold text-[16px] text-[#1a2e22] leading-tight" style="font-family:'Plus Jakarta Sans',sans-serif">
+              Cabai Merah Keriting
+            </h3>
+            <p class="text-xs text-[#4a6257] flex items-center gap-1 mt-1">
+              <span class="material-symbols-outlined text-[13px]">location_on</span>
+              Peternakan Hijau, Lembang
+            </p>
+          </div>
+          <div class="mt-auto">
+            <div class="flex justify-between items-end mb-3">
+              <span class="font-bold text-green-700 text-[18px]">
+                Rp 45.000<span class="text-xs font-normal text-[#4a6257]">/kg</span>
+              </span>
+              <span class="text-xs text-[#6e8f80]">Stok: 120kg</span>
+            </div>
+            <button class="btn-cart w-full py-2 bg-white text-green-700 border border-green-700/30 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="product-card bg-white rounded-2xl overflow-hidden flex flex-col border border-green-100"
+           data-aos="fade-up" data-aos-delay="80" data-aos-duration="600">
+        <div class="relative h-44 overflow-hidden bg-[#eef4f0]">
+          <img alt="Bawang Merah"
+               class="w-full h-full object-cover"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwDV3xn-lOet_yn2jPYegl88PCV3DkvX9goem0fqMRibw-JNJNAUJaweCGxAFEKRJQBfjWKNsJ_zHoK7BMuDTZ6MnEcRoQHZOaz5ltv5XetVQ9Kxb0pSr-Wc-Wr_CGiF_LyBmX0Bw4SN9r0kod3GNdw_bmlj8XAe1cPX-nVvBBVsyZmKd7TdKXagVWs_ZOnauaX1hUK53ZuhgVqvTAa_9BDmLdK5qvc7YNh036vqjWBA4Jtbn7gfUJmKPSBJX6R6Dn5Z3efDFmteZt"/>
+          <div class="absolute top-3 left-3 px-2 py-1 bg-green-100/90 backdrop-blur-sm text-green-700 rounded-full text-[10px] font-bold uppercase flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">verified</span> Eco-Certified
+          </div>
+        </div>
+        <div class="p-4 flex flex-col flex-grow space-y-3">
+          <div>
+            <h3 class="font-semibold text-[16px] text-[#1a2e22] leading-tight" style="font-family:'Plus Jakarta Sans',sans-serif">
+              Bawang Merah Super
+            </h3>
+            <p class="text-xs text-[#4a6257] flex items-center gap-1 mt-1">
+              <span class="material-symbols-outlined text-[13px]">location_on</span>
+              Nganjuk, Jawa Timur
+            </p>
+          </div>
+          <div class="mt-auto">
+            <div class="flex justify-between items-end mb-3">
+              <span class="font-bold text-green-700 text-[18px]">
+                Rp 32.000<span class="text-xs font-normal text-[#4a6257]">/kg</span>
+              </span>
+              <span class="text-xs text-[#6e8f80]">Stok: 85kg</span>
+            </div>
+            <button class="btn-cart w-full py-2 bg-white text-green-700 border border-green-700/30 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="product-card bg-white rounded-2xl overflow-hidden flex flex-col border border-green-100"
+           data-aos="fade-up" data-aos-delay="160" data-aos-duration="600">
+        <div class="relative h-44 overflow-hidden bg-[#eef4f0]">
+          <img alt="Wortel"
+               class="w-full h-full object-cover"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7PMppr3U4AlLAAMzg78RmR9S9C-JcFZ8BqJzzunrDxO-jpTjBBrBP-xMDLkjm7TWv22Azig0LiK-qY8i4AEyCGRVVyJ8mRDThpL7vxOOHfvxmPDb8d8TSJv_4F93jxNu-klOSFdAOx2nbPvi1dSQzYPWepG8IIX3PZ1yddKm9-uD66EUoozEfzHF1p1bbzDWkmyuEKCr8fQDHK7DhlivsNT2cApF1FTukD3OOW6xa1CiC3hXGU6a_PuYqWgCpn3KTcsiutkIiUWFQ"/>
+        </div>
+        <div class="p-4 flex flex-col flex-grow space-y-3">
+          <div>
+            <h3 class="font-semibold text-[16px] text-[#1a2e22] leading-tight" style="font-family:'Plus Jakarta Sans',sans-serif">
+              Wortel Organik
+            </h3>
+            <p class="text-xs text-[#4a6257] flex items-center gap-1 mt-1">
+              <span class="material-symbols-outlined text-[13px]">location_on</span>
+              Malang, Jawa Timur
+            </p>
+          </div>
+          <div class="mt-auto">
+            <div class="flex justify-between items-end mb-3">
+              <span class="font-bold text-[#6e8f80] text-[18px]">
+                Rp 15.000<span class="text-xs font-normal text-[#4a6257]">/kg</span>
+              </span>
+              <span class="text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded">Stok Habis</span>
+            </div>
+            <button disabled class="w-full py-2 bg-[#eef4f0] text-[#6e8f80] rounded-lg text-sm font-semibold flex items-center justify-center gap-2 cursor-not-allowed">
+              Beritahu Saya
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="product-card bg-white rounded-2xl overflow-hidden flex flex-col border border-green-100"
+           data-aos="fade-up" data-aos-delay="240" data-aos-duration="600">
+        <div class="relative h-44 overflow-hidden bg-[#eef4f0]">
+          <img alt="Tomat"
+               class="w-full h-full object-cover"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxm2Gy9fJF6akjhqeUZnF0MombseYPNosOxO7pxqLy71VMkfj4eqr4Pqgez3meQVtibgFem2J-aNr0RFfRXfW4LLzslUfL6s1ehD2ZWCyQxYIqCWG_MZZP10lwstMm0KyLqhQFaqFBpeU2Y4-Rl6E7zkcKHtSqILMchBGYHcXb7kHWPoE9kCY0EiMG3c7e26TDO0oympQ9LybXndAvLQkxTONsS-T029ik4eGkes2acHYkD2K2Tiep3pggoOaIkIrDtu1B_6fVdWAD"/>
+          <div class="absolute top-3 left-3 px-2 py-1 bg-green-100/90 backdrop-blur-sm text-green-700 rounded-full text-[10px] font-bold uppercase flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">eco</span> Fresh Harvest
+          </div>
+        </div>
+        <div class="p-4 flex flex-col flex-grow space-y-3">
+          <div>
+            <h3 class="font-semibold text-[16px] text-[#1a2e22] leading-tight" style="font-family:'Plus Jakarta Sans',sans-serif">
+              Tomat TW
+            </h3>
+            <p class="text-xs text-[#4a6257] flex items-center gap-1 mt-1">
+              <span class="material-symbols-outlined text-[13px]">location_on</span>
+              Garut, Jawa Barat
+            </p>
+          </div>
+          <div class="mt-auto">
+            <div class="flex justify-between items-end mb-3">
+              <span class="font-bold text-green-700 text-[18px]">
+                Rp 12.500<span class="text-xs font-normal text-[#4a6257]">/kg</span>
+              </span>
+              <span class="text-xs text-[#6e8f80]">Stok: 200kg</span>
+            </div>
+            <button class="btn-cart w-full py-2 bg-white text-green-700 border border-green-700/30 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="product-card bg-white rounded-2xl overflow-hidden flex flex-col border border-green-100"
+           data-aos="fade-up" data-aos-delay="320" data-aos-duration="600">
+        <div class="relative h-44 overflow-hidden bg-[#eef4f0]">
+          <img alt="Kangkung"
+               class="w-full h-full object-cover"
+               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnhXLPu1XQw_YoH8HVGf4vkrrMjsv7F3h6JpVH6OeE6em4mI0EMfXgII930OwJ0kCEDMByExmfPGKwev3rU97MsAH6nLZvp82ww6kaZW_W1rXepIjkqQrh7gnyPEmYJPmlbmx41m95hSktMGQR4-ABfD5ut9p5FbStie725ijezSlyrzPisPeib23WUt0A1Efr8mvJMx1_AQqCCJLfEoTLfXOeuHC4bwIqhC49UiGbiCo3__w2hOMA6TyNGV8icHhyJlHym1Iynkh7"/>
+          <div class="absolute top-3 left-3 px-2 py-1 bg-green-100/90 backdrop-blur-sm text-green-700 rounded-full text-[10px] font-bold uppercase flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px]">eco</span> Organik
+          </div>
+        </div>
+        <div class="p-4 flex flex-col flex-grow space-y-3">
+          <div>
+            <h3 class="font-semibold text-[16px] text-[#1a2e22] leading-tight" style="font-family:'Plus Jakarta Sans',sans-serif">
+              Sayur Hijau Segar
+            </h3>
+            <p class="text-xs text-[#4a6257] flex items-center gap-1 mt-1">
+              <span class="material-symbols-outlined text-[13px]">location_on</span>
+              Cianjur, Jawa Barat
+            </p>
+          </div>
+          <div class="mt-auto">
+            <div class="flex justify-between items-end mb-3">
+              <span class="font-bold text-green-700 text-[18px]">
+                Rp 8.000<span class="text-xs font-normal text-[#4a6257]">/ikat</span>
+              </span>
+              <span class="text-xs text-[#6e8f80]">Stok: 500ikat</span>
+            </div>
+            <button class="btn-cart w-full py-2 bg-white text-green-700 border border-green-700/30 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[16px]">add_shopping_cart</span>
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── MARKET PRICE SECTION ──────────────────── -->
+<section class="py-20 px-4 md:px-8 bg-white" id="harga-pasar">
+  <div class="max-w-7xl mx-auto space-y-10">
+
+    <div class="text-center max-w-2xl mx-auto space-y-3"
+         data-aos="fade-up" data-aos-duration="600">
+      <h2 class="text-2xl md:text-3xl font-bold text-[#1a2e22]" style="font-family:'Plus Jakarta Sans',sans-serif">
+        Indeks Harga Pasar
+      </h2>
+      <p class="text-sm text-[#4a6257]">
+        Pantau pergerakan harga komoditas utama secara real-time untuk pengambilan keputusan yang lebih baik.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+      <!-- Stat 1 -->
+      <div class="stat-card bg-[#f6faf7] rounded-2xl p-6 border border-green-100 flex flex-col space-y-3"
+           data-aos="fade-up" data-aos-delay="0" data-aos-duration="600">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-[#4a6257] font-medium">Cabai Merah</span>
+          <span class="material-symbols-outlined icon-trending text-green-700 bg-green-100 p-1.5 rounded-full text-[18px]">trending_up</span>
+        </div>
+        <div>
+          <div class="text-2xl font-bold text-[#1a2e22]">Rp 45.000</div>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="inline-flex items-center text-red-500 text-xs font-semibold">
+              <span class="material-symbols-outlined text-[13px]">arrow_upward</span> 2.4%
+            </span>
+            <span class="text-xs text-[#6e8f80]">vs minggu lalu</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat 2 -->
+      <div class="stat-card bg-[#f6faf7] rounded-2xl p-6 border border-green-100 flex flex-col space-y-3"
+           data-aos="fade-up" data-aos-delay="80" data-aos-duration="600">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-[#4a6257] font-medium">Bawang Merah</span>
+          <span class="material-symbols-outlined text-green-700 bg-green-100 p-1.5 rounded-full text-[18px]">trending_down</span>
+        </div>
+        <div>
+          <div class="text-2xl font-bold text-[#1a2e22]">Rp 32.000</div>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="inline-flex items-center text-green-600 text-xs font-semibold">
+              <span class="material-symbols-outlined text-[13px]">arrow_downward</span> 1.1%
+            </span>
+            <span class="text-xs text-[#6e8f80]">vs minggu lalu</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat 3 -->
+      <div class="stat-card bg-[#f6faf7] rounded-2xl p-6 border border-green-100 flex flex-col space-y-3"
+           data-aos="fade-up" data-aos-delay="160" data-aos-duration="600">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-[#4a6257] font-medium">Tomat Sayur</span>
+          <span class="material-symbols-outlined text-green-700 bg-green-100 p-1.5 rounded-full text-[18px]">trending_flat</span>
+        </div>
+        <div>
+          <div class="text-2xl font-bold text-[#1a2e22]">Rp 15.000</div>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="inline-flex items-center text-[#6e8f80] text-xs font-semibold">
+              <span class="material-symbols-outlined text-[13px]">horizontal_rule</span> 0.0%
+            </span>
+            <span class="text-xs text-[#6e8f80]">vs minggu lalu</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat 4 -->
+      <div class="stat-card bg-[#f6faf7] rounded-2xl p-6 border border-green-100 flex flex-col space-y-3"
+           data-aos="fade-up" data-aos-delay="240" data-aos-duration="600">
+        <div class="flex justify-between items-center">
+          <span class="text-sm text-[#4a6257] font-medium">Wortel Lokal</span>
+          <span class="material-symbols-outlined icon-trending text-green-700 bg-green-100 p-1.5 rounded-full text-[18px]">trending_up</span>
+        </div>
+        <div>
+          <div class="text-2xl font-bold text-[#1a2e22]">Rp 12.000</div>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="inline-flex items-center text-red-500 text-xs font-semibold">
+              <span class="material-symbols-outlined text-[13px]">arrow_upward</span> 3.2%
+            </span>
+            <span class="text-xs text-[#6e8f80]">vs minggu lalu</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="text-center pt-2" data-aos="fade-up" data-aos-duration="600">
+      <a href="harga-pasar.html"
+         class="btn-outline inline-flex items-center gap-2 px-6 py-3 border border-green-700/40 text-green-700 rounded-lg text-sm font-semibold hover:bg-green-50">
+        Lihat Semua Harga
+        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ─── FOOTER ─────────────────────────────────── -->
+<footer class="bg-[#eef4f0] w-full py-14 px-4 md:px-8 border-t border-green-100 mt-0"
+        data-aos="fade-up" data-aos-duration="600">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+
+    <div class="space-y-3 sm:col-span-2 md:col-span-1">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-green-700 text-2xl">eco</span>
+        <span class="font-bold text-lg text-green-700" style="font-family:'Plus Jakarta Sans',sans-serif">
+          GROWRUM
+        </span>
+      </div>
+      <p class="text-xs text-[#4a6257] leading-relaxed max-w-xs">
+        Membangun ekosistem pertanian modern yang transparan, efisien, dan berkelanjutan.
+      </p>
+      <p class="text-xs text-[#6e8f80]">© 2026 GROWRUM.</p>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Navigasi</h4>
+      <ul class="space-y-2">
+        <li><a href="product.html" class="text-sm text-[#4a6257] hover:text-green-700">Produk</a></li>
+        <li><a href="harga-pasar.html" class="text-sm text-[#4a6257] hover:text-green-700">Harga Pasar</a></li>
+        <li><a href="edukasi.html" class="text-sm text-[#4a6257] hover:text-green-700">Edukasi</a></li>
+        <li><a href="panen.html" class="text-sm text-[#4a6257] hover:text-green-700">Panen</a></li>
+      </ul>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Company</h4>
+      <ul class="space-y-2">
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Tentang Kami</a></li>
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Kebijakan Privasi</a></li>
+      </ul>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Legal</h4>
+      <ul class="space-y-2">
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Syarat &amp; Ketentuan</a></li>
+        <li><a href="kontak.html" class="text-sm text-[#4a6257] hover:text-green-700">Bantuan</a></li>
+      </ul>
+    </div>
+
+  </div>
+</footer>
+
+<!-- ─── SCRIPTS ────────────────────────────────── -->
+<script>
+  // AOS init
+  document.addEventListener('DOMContentLoaded', () => {
+    AOS.init({
+      once: true,
+      offset: 60,
+      easing: 'ease-out-cubic',
+    });
+  });
+
+  // Scroll progress bar
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = max > 0 ? (scrolled / max) * 100 : 0;
+    document.getElementById('scroll-bar').style.width = pct + '%';
+
+    // Back to top visibility
+    const btn = document.getElementById('back-to-top');
+    if (scrolled > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  });
+</script>
+
+</body>
+</html>

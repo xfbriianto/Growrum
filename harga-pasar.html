@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Growrum - Harga Pasar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+
+<!-- AOS - Animate On Scroll (sama seperti halaman utama) -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+<style>
+  /* ─── GLOBAL ─────────────────────────────── */
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f6faf7;
+    color: #1a2e22;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* ─── NAVBAR ANIMATIONS (sama seperti halaman utama) ─── */
+  #navbar header {
+    animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+  #mobileMenu:not(.hidden) {
+    animation: menuOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes menuOpen {
+    from { opacity: 0; transform: scaleY(0.95) translateY(-8px); }
+    to   { opacity: 1; transform: scaleY(1)    translateY(0);    }
+  }
+  #mobileOverlay:not(.hidden) {
+    animation: fadeIn 0.25s ease both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .nav-link {
+    position: relative;
+    padding-bottom: 2px;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0;
+    width: 0; height: 2px;
+    background: #15803d;
+    transition: width 0.25s ease;
+    border-radius: 2px;
+  }
+  .nav-link:hover::after { width: 100%; }
+
+  /* ─── SCROLL PROGRESS BAR ────────────────── */
+  #scroll-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #15803d, #4ade80);
+    z-index: 9999;
+    transition: width 0.1s linear;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ─── BACK TO TOP ────────────────────────── */
+  #back-to-top {
+    position: fixed;
+    bottom: 2rem; right: 1.5rem;
+    z-index: 100;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #15803d;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(21,128,61,0.3);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    border: none;
+  }
+  #back-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #back-to-top:hover { background: #166534; }
+
+  /* ─── CARD HOVER EFFECTS (seperti produk) ── */
+  .price-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease;
+  }
+  .price-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(21, 128, 61, 0.12);
+  }
+
+  .table-row {
+    transition: all 0.2s ease;
+  }
+  .table-row:hover {
+    background-color: #eef4f0;
+    transform: translateX(2px);
+  }
+
+  /* AOS overrides */
+  [data-aos] { pointer-events: none; }
+  [data-aos].aos-animate { pointer-events: auto; }
+</style>
+</head>
+<body class="bg-[#f6faf7] text-[#1a2e22] antialiased">
+
+<!-- Scroll Progress Bar -->
+<div id="scroll-bar"></div>
+
+<!-- Back to Top Button -->
+<button id="back-to-top" aria-label="Kembali ke atas" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <span class="material-symbols-outlined text-[20px]">arrow_upward</span>
+</button>
+
+<!-- NAVBAR CONTAINER -->
+<div id="navbar"></div>
+
+<script>
+  // Load navbar dengan fallback
+  fetch('components/navbar.html')
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById('navbar').innerHTML = data;
+      setActiveNav();
+      initNavbar();
+    })
+    .catch(() => {
+      // fallback navbar jika file tidak ditemukan
+      document.getElementById('navbar').innerHTML = `
+        <nav class="bg-white/95 backdrop-blur-sm border-b border-green-100 sticky top-0 z-40">
+          <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+            <div class="text-green-700 font-bold text-xl tracking-tight">GROWRUM</div>
+            <div class="hidden md:flex gap-8"><a href="index.html" class="nav-link">Beranda</a><a href="harga-pasar.html" class="nav-link">Harga Pasar</a></div>
+          </div>
+        </nav>`;
+      setActiveNav();
+    });
+
+  function setActiveNav() {
+    const links = document.querySelectorAll(".nav-link");
+    const currentPage = window.location.pathname.split("/").pop() || 'harga-pasar.html';
+    links.forEach(link => {
+      const linkPage = link.getAttribute("href");
+      if (linkPage === currentPage) {
+        link.classList.add("text-green-700","font-semibold","border-b-2","border-green-600","pb-1");
+      } else {
+        link.classList.remove("text-green-700","font-semibold","border-b-2","border-green-600","pb-1");
+      }
+    });
+  }
+
+  function initNavbar() {
+    const btn = document.getElementById("menuBtn");
+    const menu = document.getElementById("mobileMenu");
+    const overlay = document.getElementById("mobileOverlay");
+    if (!btn || !menu) return;
+    function openMenu() { menu.classList.remove("hidden"); if(overlay) overlay.classList.remove("hidden"); btn.setAttribute("aria-expanded","true"); document.body.style.overflow = "hidden"; }
+    function closeMenu() { menu.classList.add("hidden"); if(overlay) overlay.classList.add("hidden"); btn.setAttribute("aria-expanded","false"); document.body.style.overflow = ""; }
+    btn.addEventListener("click", () => menu.classList.contains("hidden") ? openMenu() : closeMenu());
+    if(overlay) overlay.addEventListener("click", closeMenu);
+    menu.querySelectorAll("a").forEach(a => a.addEventListener("click", closeMenu));
+  }
+</script>
+
+<!-- Main Canvas -->
+<main class="flex-grow w-full px-4 md:px-8 max-w-7xl mx-auto py-16 flex flex-col gap-16">
+  <!-- Header Section -->
+  <section class="flex flex-col gap-4">
+    <h1 class="text-4xl md:text-5xl font-bold text-green-700" data-aos="fade-up" data-aos-duration="800" style="font-family:'Plus Jakarta Sans',sans-serif">
+      Indeks Harga Pasar
+    </h1>
+    <p class="text-base md:text-lg text-[#4a6257] max-w-2xl" data-aos="fade-up" data-aos-delay="100" data-aos-duration="800">
+      Pantau pergerakan harga komoditas pertanian secara real-time. Data ini dikumpulkan dari berbagai pasar induk untuk membantu Anda membuat keputusan bisnis yang lebih cerdas dan strategis.
+    </p>
+    <!-- Filter & Search Bar -->
+    <div class="mt-6 flex flex-col md:flex-row gap-4 items-center bg-[#eef4f0] p-2 rounded-lg border border-green-100" data-aos="fade-up" data-aos-delay="200" data-aos-duration="600">
+      <div class="relative w-full md:w-64 flex-shrink-0">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6e8f80]">location_on</span>
+        <select class="w-full bg-white border border-green-200 text-[#1a2e22] text-sm rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-200 appearance-none">
+          <option>Semua Wilayah</option>
+          <option>Jakarta Raya</option>
+          <option>Jawa Barat</option>
+          <option>Jawa Tengah</option>
+          <option>Jawa Timur</option>
+        </select>
+      </div>
+      <div class="relative w-full flex-grow">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#6e8f80]">search</span>
+        <input class="w-full bg-white border border-green-200 text-[#1a2e22] text-sm rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-green-600 focus:ring-2 focus:ring-green-200" placeholder="Cari komoditas (cth: Cabai, Bawang)..." type="text"/>
+      </div>
+      <button class="w-full md:w-auto bg-green-700 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 text-sm font-semibold hover:bg-green-800 transition-all transform hover:-translate-y-0.5 shadow-md flex-shrink-0">
+        <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">filter_list</span>
+        Filter
+      </button>
+    </div>
+  </section>
+
+  <!-- Market Overview Cards (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- Card 1: Cabai Merah Besar -->
+  <div class="price-card bg-white rounded-2xl shadow-md p-6 flex flex-col gap-4 border border-green-100" data-aos="fade-up" data-aos-delay="0" data-aos-duration="600">
+    <div class="flex justify-between items-start">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-green-700">
+          <span class="material-symbols-outlined">local_fire_department</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-[#1a2e22]">Cabai Merah Besar</h3>
+          <p class="text-xs text-[#4a6257] uppercase tracking-wider">Per Kg</p>
+        </div>
+      </div>
+      <span class="material-symbols-outlined text-[#6e8f80]">more_vert</span>
+    </div>
+    <div class="mt-2">
+      <div class="text-3xl md:text-4xl font-bold text-green-700">Rp 48.200</div>
+      <div class="flex items-center gap-2 mt-2">
+        <span class="bg-green-100 text-green-600 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">trending_down</span>
+          -4.2%
+        </span>
+        <span class="text-sm text-[#4a6257]">vs minggu lalu</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 2: Bawang Merah -->
+  <div class="price-card bg-white rounded-2xl shadow-md p-6 flex flex-col gap-4 border border-green-100" data-aos="fade-up" data-aos-delay="80" data-aos-duration="600">
+    <div class="flex justify-between items-start">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-green-700">
+          <span class="material-symbols-outlined">psychiatry</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-[#1a2e22]">Bawang Merah</h3>
+          <p class="text-xs text-[#4a6257] uppercase tracking-wider">Per Kg</p>
+        </div>
+      </div>
+      <span class="material-symbols-outlined text-[#6e8f80]">more_vert</span>
+    </div>
+    <div class="mt-2">
+      <div class="text-3xl md:text-4xl font-bold text-green-700">Rp 36.900</div>
+      <div class="flex items-center gap-2 mt-2">
+        <span class="bg-gray-100 text-gray-500 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">trending_flat</span>
+          0.0%
+        </span>
+        <span class="text-sm text-[#4a6257]">stabil</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card 3: Tomat -->
+  <div class="price-card bg-white rounded-2xl shadow-md p-6 flex flex-col gap-4 border border-green-100" data-aos="fade-up" data-aos-delay="160" data-aos-duration="600">
+    <div class="flex justify-between items-start">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-green-700">
+          <span class="material-symbols-outlined">nutrition</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-[#1a2e22]">Tomat</h3>
+          <p class="text-xs text-[#4a6257] uppercase tracking-wider">Per Kg</p>
+        </div>
+      </div>
+      <span class="material-symbols-outlined text-[#6e8f80]">more_vert</span>
+    </div>
+    <div class="mt-2">
+      <div class="text-3xl md:text-4xl font-bold text-green-700">Rp 15.000</div>
+      <div class="flex items-center gap-2 mt-2">
+        <span class="bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">trending_up</span>
+          +7.1%
+        </span>
+        <span class="text-sm text-[#4a6257]">vs minggu lalu</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- Complex Section: Graph & Table Layout -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <!-- Price Trends Graph Container -->
+    <div class="lg:col-span-2 bg-white rounded-2xl shadow-md flex flex-col border border-green-100 overflow-hidden" data-aos="fade-right" data-aos-duration="700">
+      <div class="bg-[#f6faf7] p-6 border-b border-green-100 flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-[#1a2e22]">Tren Harga Komoditas Utama</h2>
+          <p class="text-sm text-[#4a6257] mt-1">30 Hari Terakhir</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="p-2 rounded bg-white hover:bg-[#eef4f0] transition-colors text-green-700">
+            <span class="material-symbols-outlined text-[18px]">download</span>
+          </button>
+        </div>
+      </div>
+      <div class="p-6 h-[260px] sm:h-[320px] md:h-[400px] flex items-center justify-center relative w-full bg-white">
+        <!-- Placeholder for Chart - minimalis seperti aslinya -->
+        <div class="absolute inset-0 p-6 opacity-30 pointer-events-none flex flex-col justify-between">
+          <div class="w-full h-px bg-gray-200"></div>
+          <div class="w-full h-px bg-gray-200"></div>
+          <div class="w-full h-px bg-gray-200"></div>
+          <div class="w-full h-px bg-gray-200"></div>
+          <div class="w-full h-px bg-gray-200"></div>
+        </div>
+        <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 50">
+          <path class="opacity-50" d="M0,40 Q10,35 20,40 T40,30 T60,35 T80,20 T100,25" fill="none" stroke="#715b3e" stroke-width="0.5"></path>
+          <path d="M0,45 Q15,40 30,25 T60,15 T80,5 T100,10" fill="none" stroke="#15803d" stroke-width="1.5"></path>
+          <path class="opacity-20" d="M0,45 Q15,40 30,25 T60,15 T80,5 T100,10 L100,50 L0,50 Z" fill="url(#sageGradient)"></path>
+          <defs>
+            <linearGradient id="sageGradient" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#15803d"></stop>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Detailed Price Table -->
+    <div class="lg:col-span-1 bg-white rounded-2xl shadow-md flex flex-col border border-green-100 h-full" data-aos="fade-left" data-aos-duration="700">
+      <div class="bg-[#f6faf7] p-6 border-b border-green-100">
+        <h2 class="text-xl font-bold text-[#1a2e22]">Daftar Harga Lengkap</h2>
+        <p class="text-sm text-[#4a6257] mt-1">Diperbarui: Hari ini, 08:00 WIB</p>
+      </div>
+      <div class="flex-grow overflow-y-auto">
+        <div class="flex flex-col">
+          <div class="table-row p-4 border-b border-green-100 flex items-center justify-between">
+            <div class="flex flex-col">
+              <span class="font-semibold text-[#1a2e22]">Wortel Lokal</span>
+              <span class="text-sm text-[#4a6257]">Rp 12.000 / kg</span>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="text-green-600 text-sm flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">arrow_upward</span> 2.1%
+              </span>
+              <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">Tersedia</span>
+            </div>
+          </div>
+          <div class="table-row p-4 border-b border-green-100 flex items-center justify-between">
+            <div class="flex flex-col">
+              <span class="font-semibold text-[#1a2e22]">Selada Hidroponik</span>
+              <span class="text-sm text-[#4a6257]">Rp 25.000 / kg</span>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="text-gray-400 text-sm flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">horizontal_rule</span> 0.0%
+              </span>
+              <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">Tersedia</span>
+            </div>
+          </div>
+          <div class="table-row p-4 border-b border-green-100 flex items-center justify-between">
+            <div class="flex flex-col">
+              <span class="font-semibold text-[#1a2e22]">Bawang Putih Honan</span>
+              <span class="text-sm text-[#4a6257]">Rp 40.000 / kg</span>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="text-red-500 text-sm flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">arrow_upward</span> 8.5%
+              </span>
+              <span class="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-[10px] font-semibold">Stok Menipis</span>
+            </div>
+          </div>
+          <div class="table-row p-4 border-b border-green-100 flex items-center justify-between">
+            <div class="flex flex-col">
+              <span class="font-semibold text-[#1a2e22]">Kentang Dieng</span>
+              <span class="text-sm text-[#4a6257]">Rp 18.500 / kg</span>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              <span class="text-green-600 text-sm flex items-center gap-1">
+                <span class="material-symbols-outlined text-[16px]">arrow_downward</span> 1.2%
+              </span>
+              <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-semibold">Tersedia</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="p-4 border-t border-green-100">
+        <button class="w-full border border-green-700 text-green-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-50 transition-all transform hover:-translate-y-0.5">Lihat Semua Tabel</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ─── FOOTER (Sesuai permintaan, sama persis dengan contoh) ─── -->
+<footer class="bg-[#eef4f0] w-full py-14 px-4 md:px-8 border-t border-green-100 mt-0"
+        data-aos="fade-up" data-aos-duration="600">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+
+    <div class="space-y-3 sm:col-span-2 md:col-span-1">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-green-700 text-2xl">eco</span>
+        <span class="font-bold text-lg text-green-700" style="font-family:'Plus Jakarta Sans',sans-serif">
+          GROWRUM
+        </span>
+      </div>
+      <p class="text-xs text-[#4a6257] leading-relaxed max-w-xs">
+        Membangun ekosistem pertanian modern yang transparan, efisien, dan berkelanjutan.
+      </p>
+      <p class="text-xs text-[#6e8f80]">© 2026 GROWRUM.</p>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Navigasi</h4>
+      <ul class="space-y-2">
+        <li><a href="product.html" class="text-sm text-[#4a6257] hover:text-green-700 transition">Produk</a></li>
+        <li><a href="harga-pasar.html" class="text-sm text-[#4a6257] hover:text-green-700 transition">Harga Pasar</a></li>
+        <li><a href="edukasi.html" class="text-sm text-[#4a6257] hover:text-green-700 transition">Edukasi</a></li>
+        <li><a href="panen.html" class="text-sm text-[#4a6257] hover:text-green-700 transition">Panen</a></li>
+      </ul>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Company</h4>
+      <ul class="space-y-2">
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700 transition">Tentang Kami</a></li>
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700 transition">Kebijakan Privasi</a></li>
+      </ul>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Legal</h4>
+      <ul class="space-y-2">
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700 transition">Syarat &amp; Ketentuan</a></li>
+        <li><a href="kontak.html" class="text-sm text-[#4a6257] hover:text-green-700 transition">Bantuan</a></li>
+      </ul>
+    </div>
+
+  </div>
+</footer>
+
+<script>
+  // Inisialisasi AOS
+  document.addEventListener('DOMContentLoaded', function() {
+    AOS.init({
+      once: true,
+      offset: 40,
+      easing: 'ease-out-cubic',
+      duration: 700
+    });
+  });
+
+  // Scroll progress bar
+  window.addEventListener('scroll', function() {
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const percent = max > 0 ? (scrolled / max) * 100 : 0;
+    let bar = document.getElementById('scroll-bar');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'scroll-bar';
+      document.body.appendChild(bar);
+    }
+    bar.style.width = percent + '%';
+
+    const backBtn = document.getElementById('back-to-top');
+    if (scrolled > 300) backBtn.classList.add('visible');
+    else backBtn.classList.remove('visible');
+  });
+
+  // Filter button simulasi
+  const filterBtn = document.querySelector('.bg-green-700.text-white');
+  if (filterBtn) {
+    filterBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      alert('Demo: Filter harga akan menyesuaikan berdasarkan pilihan wilayah dan keyword.');
+    });
+  }
+</script>
+</body>
+</html>
