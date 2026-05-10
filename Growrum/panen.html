@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Growrum - Galeri Panen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<!-- AOS - Animate On Scroll -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+<style>
+  /* ─── GLOBAL ─────────────────────────────── */
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f6faf7;
+    color: #1a2e22;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* ─── NAVBAR ANIMATIONS (sama seperti halaman utama) ─── */
+  #navbar header {
+    animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+  }
+  #mobileMenu:not(.hidden) {
+    animation: menuOpen 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes menuOpen {
+    from { opacity: 0; transform: scaleY(0.95) translateY(-8px); }
+    to   { opacity: 1; transform: scaleY(1)    translateY(0);    }
+  }
+  #mobileOverlay:not(.hidden) {
+    animation: fadeIn 0.25s ease both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .nav-link {
+    position: relative;
+    padding-bottom: 2px;
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; left: 0;
+    width: 0; height: 2px;
+    background: #15803d;
+    transition: width 0.25s ease;
+    border-radius: 2px;
+  }
+  .nav-link:hover::after { width: 100%; }
+
+  /* ─── SCROLL PROGRESS BAR ────────────────── */
+  #scroll-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: linear-gradient(90deg, #15803d, #4ade80);
+    z-index: 9999;
+    transition: width 0.1s linear;
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* ─── BACK TO TOP ────────────────────────── */
+  #back-to-top {
+    position: fixed;
+    bottom: 2rem; right: 1.5rem;
+    z-index: 100;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #15803d;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(21,128,61,0.3);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: pointer;
+    border: none;
+  }
+  #back-to-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #back-to-top:hover { background: #166534; }
+
+  /* ─── CARD HOVER EFFECTS (seperti produk) ── */
+  .gallery-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease;
+  }
+  .gallery-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(21, 128, 61, 0.12);
+  }
+  .gallery-card img {
+    transition: transform 0.5s ease;
+  }
+  .gallery-card:hover img { transform: scale(1.05); }
+
+  /* Filter button active */
+  .filter-btn.active {
+    background-color: #15803d;
+    color: white;
+    box-shadow: 0 2px 8px rgba(21,128,61,0.3);
+  }
+  .filter-btn:not(.active) {
+    background-color: white;
+    border: 1px solid #d1e0d6;
+    color: #4a6257;
+  }
+  .filter-btn:not(.active):hover {
+    background-color: #eef4f0;
+    transform: translateY(-1px);
+  }
+
+  /* Video modal */
+  .modal-fade {
+    transition: opacity 0.25s ease, visibility 0.25s;
+  }
+  .modal-content-scale {
+    transform: scale(0.96);
+    transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+  }
+  .modal-open .modal-content-scale {
+    transform: scale(1);
+  }
+
+  /* AOS overrides */
+  [data-aos] { pointer-events: none; }
+  [data-aos].aos-animate { pointer-events: auto; }
+</style>
+</head>
+<body class="bg-[#f6faf7] text-[#1a2e22] antialiased">
+
+<!-- Scroll Progress Bar -->
+<div id="scroll-bar"></div>
+
+<!-- Back to Top Button -->
+<button id="back-to-top" aria-label="Kembali ke atas" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <span class="material-symbols-outlined text-[20px]">arrow_upward</span>
+</button>
+
+<!-- NAVBAR CONTAINER -->
+<div id="navbar"></div>
+
+<script>
+  // Load navbar dengan fallback (sama seperti halaman utama)
+  fetch('components/navbar.html')
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById('navbar').innerHTML = data;
+      setActiveNav();
+      initNavbar();
+    })
+    .catch(() => {
+      // fallback sederhana jika file navbar tidak ditemukan
+      document.getElementById('navbar').innerHTML = `
+        <nav class="bg-white/95 backdrop-blur-sm border-b border-green-100 sticky top-0 z-40">
+          <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+            <div class="text-green-700 font-bold text-xl tracking-tight">TERRAFLOW AGRI</div>
+            <div class="hidden md:flex gap-8"><a href="#" class="nav-link">Beranda</a><a href="#" class="nav-link">Panen</a></div>
+          </div>
+        </nav>`;
+      setActiveNav();
+    });
+
+  function setActiveNav() {
+    const links = document.querySelectorAll(".nav-link");
+    const currentPage = window.location.pathname.split("/").pop() || 'panen.html';
+    links.forEach(link => {
+      const linkPage = link.getAttribute("href");
+      if (linkPage === currentPage) {
+        link.classList.add("text-green-700","font-semibold","border-b-2","border-green-600","pb-1");
+      } else {
+        link.classList.remove("text-green-700","font-semibold","border-b-2","border-green-600","pb-1");
+      }
+    });
+  }
+
+  function initNavbar() {
+    const btn = document.getElementById("menuBtn");
+    const menu = document.getElementById("mobileMenu");
+    const overlay = document.getElementById("mobileOverlay");
+    if (!btn || !menu) return;
+    function openMenu() { menu.classList.remove("hidden"); if(overlay) overlay.classList.remove("hidden"); btn.setAttribute("aria-expanded","true"); document.body.style.overflow = "hidden"; }
+    function closeMenu() { menu.classList.add("hidden"); if(overlay) overlay.classList.add("hidden"); btn.setAttribute("aria-expanded","false"); document.body.style.overflow = ""; }
+    btn.addEventListener("click", () => menu.classList.contains("hidden") ? openMenu() : closeMenu());
+    if(overlay) overlay.addEventListener("click", closeMenu);
+    menu.querySelectorAll("a").forEach(a => a.addEventListener("click", closeMenu));
+  }
+</script>
+
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center w-full pb-32">
+  
+  <!-- Hero Section dengan AOS -->
+  <section class="w-full max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-20 text-center flex flex-col items-center">
+    <h1 class="text-4xl md:text-5xl font-bold text-[#1a2e22] mb-6" data-aos="fade-up" data-aos-duration="800" style="font-family:'Plus Jakarta Sans',sans-serif">
+      Galeri Hasil Panen
+    </h1>
+    <p class="text-base md:text-lg text-[#4a6257] max-w-2xl" data-aos="fade-up" data-aos-delay="100" data-aos-duration="800">
+      Transparansi penuh dari ladang ke meja Anda. Kami mendokumentasikan setiap proses panen untuk memastikan kualitas, kesegaran, dan praktik pertanian yang berkelanjutan.
+    </p>
+  </section>
+
+  <section class="w-full max-w-7xl mx-auto px-4 md:px-8 mb-20">
+ 
+  <h2 class="text-2xl md:text-3xl font-bold text-[#1a2e22] mb-8"
+      data-aos="fade-up" data-aos-duration="600">
+    Proses Panen Minggu Ini
+  </h2>
+ 
+  <!-- Video Thumbnail Trigger -->
+  <div id="videoTrigger"
+       class="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-[#eef4f0] group cursor-pointer transition-all duration-300 hover:shadow-xl"
+       onclick="openVideoModal('https://www.youtube.com/embed/lCw0D6QqcGE?autoplay=1')"
+       data-aos="fade-up" data-aos-delay="100" data-aos-duration="600">
+ 
+    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+         src="https://img.youtube.com/vi/lCw0D6QqcGE/maxresdefault.jpg"
+         alt="Video thumbnail panen"
+         onerror="this.src='https://img.youtube.com/vi/lCw0D6QqcGE/hqdefault.jpg'"/>
+ 
+    <div class="absolute inset-0 bg-black/30 flex items-center justify-center transition-colors duration-300 group-hover:bg-black/20">
+      <button id="playVideoBtn"
+              class="w-16 h-16 md:w-20 md:h-20 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-green-700 shadow-lg hover:scale-110 transition-transform duration-200">
+        <span class="material-symbols-outlined text-3xl md:text-4xl"
+              style="font-variation-settings:'FILL' 1;">play_arrow</span>
+      </button>
+    </div>
+ 
+  </div>
+</section>
+ 
+ 
+<!-- ═══════════════════════════════════════════════════
+     VIDEO MODAL
+═══════════════════════════════════════════════════ -->
+<div id="videoModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm"
+     onclick="handleModalBackdropClick(event)">
+ 
+  <div class="relative w-full max-w-4xl mx-4"
+       id="videoModalContent">
+ 
+    <div class="bg-white rounded-2xl overflow-hidden shadow-2xl">
+ 
+      <!-- iframe wrapper -->
+      <div class="relative aspect-video bg-black">
+        <iframe id="videoIframe"
+                class="w-full h-full"
+                src="about:blank"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+        </iframe>
+ 
+        <!-- Close button -->
+        <button id="closeModalBtn"
+                onclick="closeVideoModal()"
+                class="absolute top-3 right-3 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200 text-white backdrop-blur-sm">
+          <span class="material-symbols-outlined text-2xl">close</span>
+        </button>
+      </div>
+ 
+      <!-- Modal info -->
+      <div class="p-5 bg-white">
+        <h3 class="text-xl font-bold text-[#1a2e22]">🎥 Video Edukasi: Inovasi Pertanian: Ilmuwan Korea Menanam Sayuran Segar</h3>
+        <p class="text-sm text-[#4a6257] mt-1">
+          Saksikan proses panen terbaru kami yang dipandu oleh teknologi canggih dan praktik pertanian berkelanjutan. Dapatkan wawasan mendalam tentang bagaimana kami menjaga kualitas dan kesegaran hasil panen untuk Anda.
+        </p>
+      </div>
+ 
+    </div>
+  </div>
+</div>
+ 
+ 
+<!-- ═══════════════════════════════════════════════════
+     GALLERY SECTION
+═══════════════════════════════════════════════════ -->
+<section class="w-full max-w-7xl mx-auto px-4 md:px-8 mb-20">
+ 
+  <!-- Filter Buttons -->
+  <div class="flex flex-wrap gap-3 mb-12 justify-center md:justify-start"
+       data-aos="fade-up" data-aos-duration="600">
+    <button class="filter-btn active px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+            data-filter="all">Semua</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+            data-filter="video">Video</button>
+    <button class="filter-btn px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+            data-filter="foto">Foto</button>
+  </div>
+ 
+  <!-- Gallery Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="galleryGrid">
+ 
+    <!-- ── Card 1 · Foto ── -->
+    <div class="gallery-card bg-white rounded-2xl overflow-hidden shadow-md border border-green-100 flex flex-col"
+         data-category="foto"
+         data-aos="fade-up" data-aos-delay="0" data-aos-duration="600">
+ 
+      <div class="relative aspect-square overflow-hidden">
+        <img alt="Panen Cabai Merah"
+             class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+             src="https://lh3.googleusercontent.com/aida-public/AB6AXuB5I81JihMtUWdzDKaZ_gh7fzs4Bv_uuwfdF9QWmHoBOMp8gbDyx1-1iR6KC3TN7zS6qKFAiYSfPfgEvd3ljYqdMDw8N7rsyCxzLSOJbsqlRXUJlW8PDIJIrZ5JxqCfEsplC1T0bHsa_wLkXLbNDGqpfi8j57EuOAkikHSy7aPFT1WgAr0SJu6nDwZs-PUfxS7zZrm4_qxTh5ES-Zs_qeR-NrYORrT68EmZTYmj_-P0coE7UGlzN9gcoJM322UhAQoda-2KeEiGDyZw"/>
+        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-2 shadow-sm">
+          <span class="material-symbols-outlined text-[16px] text-green-700">location_on</span>
+          <span class="text-xs font-medium text-[#1a2e22]">Lembang, Jawa Barat</span>
+        </div>
+      </div>
+ 
+      <div class="p-6">
+        <h3 class="text-xl font-bold text-[#1a2e22] mb-2">Panen Cabai Merah</h3>
+        <p class="text-sm text-[#4a6257]">
+          Kualitas premium, dipetik langsung pagi hari untuk menjaga kesegaran maksimal.
+        </p>
+      </div>
+ 
+    </div>
+ 
+    <!-- ── Card 2 · Foto ── -->
+    <div class="gallery-card bg-white rounded-2xl overflow-hidden shadow-md border border-green-100 flex flex-col"
+         data-category="foto"
+         data-aos="fade-up" data-aos-delay="80" data-aos-duration="600">
+ 
+      <div class="relative aspect-square overflow-hidden">
+        <img alt="Penyortiran Bawang Merah"
+             class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+             src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeD4KeVwnGJSN-d_8xF04FlwpFpIzmVaaVuttBMKiIg-lWL_D_1utJWEnSu31yIJrxaDWs9545C4H7mvS9VxzFj3Thk2tRh9SLV0N0_soTwoZZYPoTK6B4ApBoYgfGJ6fRAUC-01Gs6yDmNq8PdrzFaYEeZ8-qu5bg79K9h0fOiYhE2RO879O4Z_yMySs_SJnmsV06-gvGkGNrcdhdD53jAPOs9_rPMB7PeZglcpnReE-7Q5srNF348qkncpgk5X0_haQTJTRgZe4T"/>
+        <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-2 shadow-sm">
+          <span class="material-symbols-outlined text-[16px] text-green-700">location_on</span>
+          <span class="text-xs font-medium text-[#1a2e22]">Brebes, Jawa Tengah</span>
+        </div>
+      </div>
+ 
+      <div class="p-6">
+        <h3 class="text-xl font-bold text-[#1a2e22] mb-2">Penyortiran Bawang Merah</h3>
+        <p class="text-sm text-[#4a6257]">
+          Proses seleksi ketat untuk memastikan hanya umbi terbaik yang sampai ke tangan Anda.
+        </p>
+      </div>
+ 
+    </div>
+ 
+    <!-- ── Card 3 · Video ── -->
+    <div class="gallery-card bg-white rounded-2xl overflow-hidden shadow-md border border-green-100 flex flex-col"
+         data-category="video"
+         data-aos="fade-up" data-aos-delay="160" data-aos-duration="600">
+ 
+      <div class="relative aspect-square overflow-hidden group cursor-pointer"
+           onclick="openVideoModal('https://www.youtube.com/embed/PhfyZXCMhWM?autoplay=1')">
+ 
+        <img alt="Inspeksi Sayur Hijau"
+             class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+             src="https://img.youtube.com/vi/PhfyZXCMhWM/maxresdefault.jpg"
+             onerror="this.src='https://img.youtube.com/vi/PhfyZXCMhWM/hqdefault.jpg'"/>
+ 
+        <!-- Play overlay -->
+        <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+          <span class="material-symbols-outlined text-5xl text-white drop-shadow-md"
+                style="font-variation-settings:'FILL' 1;">play_circle</span>
+        </div>
+ 
+        <!-- Video badge -->
+        <div class="absolute top-4 left-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[14px] text-white"
+                style="font-variation-settings:'FILL' 1;">play_circle</span>
+          <span class="text-xs font-semibold text-white">Video</span>
+        </div>
+ 
+      </div>
+ 
+      <div class="p-6">
+        <h3 class="text-xl font-bold text-[#1a2e22] mb-2">
+          Inovasi Pertanian: Ilmuwan Korea Menanam Sayuran Segar
+        </h3>
+        <p class="text-sm text-[#4a6257]">
+          Saksikan bagaimana teknologi pertanian modern di Korea memungkinkan sayuran segar ditanam dengan presisi tinggi dan dikirim langsung ke rumah Anda.
+        </p>
+      </div>
+ 
+    </div>
+ 
+  </div><!-- /galleryGrid -->
+ 
+  <!-- Load More Button — di luar grid, di dalam section -->
+  <div class="mt-12 text-center" data-aos="fade-up" data-aos-delay="200" data-aos-duration="600">
+    <button id="loadMoreBtn"
+            class="px-6 py-3 rounded-lg border border-green-700 text-green-700 hover:bg-green-50 font-semibold text-sm transition-all hover:scale-105 active:scale-95">
+      Muat Lebih Banyak
+    </button>
+  </div>
+ 
+</section>
+
+<!-- Video Modal -->
+<div id="videoModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm modal-fade transition-all duration-300" style="visibility: hidden;">
+  <div class="relative w-full max-w-4xl mx-4 modal-content-scale transition-all duration-300">
+    <div class="bg-white rounded-2xl overflow-hidden shadow-2xl">
+      <div class="relative aspect-video bg-black">
+        <iframe id="videoIframe" class="w-full h-full" src="about:blank" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <button id="closeModalBtn" class="absolute top-3 right-3 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200 text-white backdrop-blur-sm">
+          <span class="material-symbols-outlined text-2xl">close</span>
+        </button>
+      </div>
+      <div class="p-5 bg-white">
+        <h3 class="text-xl font-bold text-[#1a2e22]">🎥 Video Dokumentasi Panen</h3>
+        <p class="text-sm text-[#4a6257] mt-1">Proses panen berkelanjutan — dari lahan ke sortir modern, menjaga kualitas dan transparansi.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── FOOTER ─────────────────────────────────── -->
+<footer class="bg-[#eef4f0] w-full py-14 px-4 md:px-8 border-t border-green-100 mt-0"
+        data-aos="fade-up" data-aos-duration="600">
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 max-w-7xl mx-auto">
+
+    <div class="space-y-3 sm:col-span-2 md:col-span-1">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-green-700 text-2xl">eco</span>
+        <span class="font-bold text-lg text-green-700" style="font-family:'Plus Jakarta Sans',sans-serif">
+          GROWRUM
+        </span>
+      </div>
+      <p class="text-xs text-[#4a6257] leading-relaxed max-w-xs">
+        Membangun ekosistem pertanian modern yang transparan, efisien, dan berkelanjutan.
+      </p>
+      <p class="text-xs text-[#6e8f80]">© 2026 GROWRUM.</p>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Navigasi</h4>
+      <ul class="space-y-2">
+        <li><a href="product.html" class="text-sm text-[#4a6257] hover:text-green-700">Produk</a></li>
+        <li><a href="harga-pasar.html" class="text-sm text-[#4a6257] hover:text-green-700">Harga Pasar</a></li>
+        <li><a href="edukasi.html" class="text-sm text-[#4a6257] hover:text-green-700">Edukasi</a></li>
+        <li><a href="panen.html" class="text-sm text-[#4a6257] hover:text-green-700">Panen</a></li>
+      </ul>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Company</h4>
+      <ul class="space-y-2">
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Tentang Kami</a></li>
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Kebijakan Privasi</a></li>
+      </ul>
+    </div>
+
+    <div class="space-y-3">
+      <h4 class="text-xs font-bold text-[#1a2e22] uppercase tracking-wider">Legal</h4>
+      <ul class="space-y-2">
+        <li><a href="#" class="text-sm text-[#4a6257] hover:text-green-700">Syarat &amp; Ketentuan</a></li>
+        <li><a href="kontak.html" class="text-sm text-[#4a6257] hover:text-green-700">Bantuan</a></li>
+      </ul>
+    </div>
+
+  </div>
+</footer>
+
+<script>
+  // Inisialisasi AOS
+  document.addEventListener('DOMContentLoaded', function() {
+    AOS.init({
+      once: true,
+      offset: 40,
+      easing: 'ease-out-cubic',
+      duration: 700
+    });
+  });
+
+  // Scroll progress bar
+  window.addEventListener('scroll', function() {
+    const scrolled = window.scrollY;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    const percent = max > 0 ? (scrolled / max) * 100 : 0;
+    const bar = document.getElementById('scroll-bar');
+    if (bar) bar.style.width = percent + '%';
+
+    const backBtn = document.getElementById('back-to-top');
+    if (scrolled > 300) backBtn.classList.add('visible');
+    else backBtn.classList.remove('visible');
+  });
+
+  // Video Modal Logic
+const modal = document.getElementById('videoModal');
+const iframe = document.getElementById('videoIframe');
+const closeBtn = document.getElementById('closeModalBtn');
+const videoTrigger = document.getElementById('videoTrigger');
+const playBtn = document.getElementById('playVideoBtn');
+const VIDEO_ID = 'lCw0D6QqcGE';
+const VIDEO_URL = `https://www.youtube.com/embed/${VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`;
+
+function openVideoModal() {
+  iframe.src = VIDEO_URL;
+  modal.classList.remove('hidden');
+  modal.style.visibility = 'visible';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeVideoModal() {
+  iframe.src = 'about:blank';
+  modal.classList.add('hidden');
+  modal.style.visibility = 'hidden';
+  document.body.style.overflow = '';
+}
+
+if (videoTrigger && playBtn) {
+  videoTrigger.addEventListener('click', openVideoModal);
+  playBtn.addEventListener('click', (e) => { e.stopPropagation(); openVideoModal(); });
+}
+if (closeBtn) closeBtn.addEventListener('click', closeVideoModal);
+if (modal) {
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeVideoModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) closeVideoModal(); });
+}
+
+  // Fungsi untuk video pada card (global)
+  window.openVideoModal = function(url) {
+    iframe.src = url;
+    modal.classList.remove('hidden');
+    modal.style.visibility = 'visible';
+    document.body.style.overflow = 'hidden';
+  };
+
+  // Filter Gallery
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const galleryItems = document.querySelectorAll('#galleryGrid > div');
+  
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filterValue = btn.getAttribute('data-filter');
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      galleryItems.forEach(item => {
+        if (filterValue === 'all' || item.getAttribute('data-category') === filterValue) {
+          item.style.display = 'flex';
+          setTimeout(() => { item.style.opacity = '1'; item.style.transform = 'scale(1)'; }, 10);
+        } else {
+          item.style.opacity = '0';
+          item.style.transform = 'scale(0.95)';
+          setTimeout(() => { item.style.display = 'none'; }, 200);
+        }
+      });
+    });
+  });
+
+  // Muat Lebih Banyak (simulasi tambah konten)
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', () => {
+      const grid = document.getElementById('galleryGrid');
+      // Contoh penambahan card dummy (bisa diisi dengan konten baru)
+      const newCard = document.createElement('div');
+      newCard.className = 'gallery-card bg-white rounded-2xl overflow-hidden shadow-md border border-green-100 flex flex-col';
+      newCard.setAttribute('data-category', 'foto');
+      newCard.innerHTML = `
+        <div class="relative aspect-square overflow-hidden">
+          <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwDV3xn-lOet_yn2jPYegl88PCV3DkvX9goem0fqMRibw-JNJNAUJaweCGxAFEKRJQBfjWKNsJ_zHoK7BMuDTZ6MnEcRoQHZOaz5ltv5XetVQ9Kxb0pSr-Wc-Wr_CGiF_LyBmX0Bw4SN9r0kod3GNdw_bmlj8XAe1cPX-nVvBBVsyZmKd7TdKXagVWs_ZOnauaX1hUK53ZuhgVqvTAa_9BDmLdK5qvc7YNh036vqjWBA4Jtbn7gfUJmKPSBJX6R6Dn5Z3efDFmteZt" alt="Panen baru">
+          <div class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-2">
+            <span class="material-symbols-outlined text-[16px] text-green-700">location_on</span>
+            <span class="text-xs font-medium">Magelang, Jateng</span>
+          </div>
+        </div>
+        <div class="p-6">
+          <h3 class="text-xl font-bold text-[#1a2e22] mb-2">Panen Kacang Panjang</h3>
+          <p class="text-sm text-[#4a6257]">Hasil panen melimpah dengan metode irigasi tetes ramah lingkungan.</p>
+        </div>
+      `;
+      grid.appendChild(newCard);
+      // Sembunyikan tombol setelah beberapa kali atau beri notifikasi
+      loadMoreBtn.innerText = 'Semua Dimuat!';
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    });
+  }
+</script>
+</body>
+</html>
